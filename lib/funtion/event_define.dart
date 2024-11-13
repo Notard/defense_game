@@ -1,7 +1,4 @@
-import 'package:defense_game/game/bullet.dart';
-import 'package:defense_game/game/enemy.dart';
 import 'package:flame/components.dart';
-import 'package:flame/src/game/notifying_vector2.dart';
 
 enum PageType {
   title,
@@ -47,12 +44,45 @@ class FireIntervalEvent {
 }
 
 class CollideEvent {
-  final List<Enemy> enemies;
-  CollideEvent({required this.enemies});
+  final List<PositionComponent> components;
+  CollideEvent({required this.components});
+}
+
+enum EnemyType {
+  normal,
 }
 
 class EnemyDamageEvent {
   final int damage;
   final int uniqueId;
-  EnemyDamageEvent({required this.damage, required this.uniqueId});
+  final EnemyType enemyType;
+  EnemyDamageEvent({
+    required this.damage,
+    required this.uniqueId,
+    required this.enemyType,
+  });
+}
+
+class EnemyDeactivateEvent {
+  final int uniqueId;
+  EnemyDeactivateEvent({required this.uniqueId});
+}
+
+class GameItemDamageEvent {
+  final PositionComponent gameItem;
+  final int damage;
+  GameItemDamageEvent({required this.gameItem, required this.damage});
+}
+
+enum GameItemType {
+  powerUp,
+  speedUp,
+  health,
+}
+
+class GameItemDeactivateEvent {
+  final GameItemType gameItemType;
+  final double itemValue;
+  GameItemDeactivateEvent(
+      {required this.gameItemType, required this.itemValue});
 }

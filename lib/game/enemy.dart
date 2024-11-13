@@ -1,3 +1,5 @@
+import 'package:defense_game/funtion/event_define.dart';
+import 'package:defense_game/funtion/eventbus.dart';
 import 'package:defense_game/game/my_ship.dart';
 import 'package:flame/components.dart';
 
@@ -8,10 +10,12 @@ abstract class Enemy extends PositionComponent {
   int damage = 1;
   bool isActive = false;
   int uniqueId;
+  EnemyType enemyType;
 
   Enemy({
     required this.myShip,
     required this.uniqueId,
+    required this.enemyType,
     super.position,
   });
 
@@ -20,6 +24,7 @@ abstract class Enemy extends PositionComponent {
     if (hp <= 0) {
       isActive = false;
       position = Vector2(-10000, -10000);
+      EventBus().fire(EnemyDeactivateEvent(uniqueId: uniqueId));
     }
   }
 

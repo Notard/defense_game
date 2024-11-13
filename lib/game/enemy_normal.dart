@@ -6,6 +6,7 @@ class EnemyNormal extends Enemy {
   EnemyNormal({
     required super.myShip,
     required super.uniqueId,
+    required super.enemyType,
     super.position,
   });
 
@@ -36,7 +37,7 @@ class EnemyNormal extends Enemy {
     Vector2 shipPosition = myShip.position;
     Vector2 distance = shipPosition - position;
     double distanceLength = distance.length;
-    if (distanceLength < 10) {
+    if (distanceLength < 100) {
       attack();
     }
   }

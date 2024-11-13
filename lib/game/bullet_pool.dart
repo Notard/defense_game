@@ -5,7 +5,6 @@ import 'package:defense_game/funtion/eventbus.dart';
 import 'package:defense_game/game/bullet.dart';
 import 'package:defense_game/game/enemy.dart';
 import 'package:flame/components.dart';
-import 'package:flame/experimental.dart';
 
 class BulletPool extends PositionComponent {
   final int initialSize;
@@ -22,6 +21,7 @@ class BulletPool extends PositionComponent {
   StreamSubscription<BulletTypeEvent>? bulletTypeSubscription;
   StreamSubscription<BulletFireEvent>? fireBulletSubscription;
   StreamSubscription<BulletDeactivateEvent>? bulletDeactivateSubscription;
+  StreamSubscription<GameItemDeactivateEvent>? gameItemDeactivateSubscription;
   //구독 변수
   StreamSubscription<CollideEvent>? collideSubscription;
 
@@ -42,6 +42,8 @@ class BulletPool extends PositionComponent {
         EventBus().on<BulletDeactivateEvent>(onBulletDeactivateEvent);
     // 이벤트 구독
     collideSubscription = EventBus().on<CollideEvent>(onCollideEvent);
+    gameItemDeactivateSubscription =
+        EventBus().on<GameItemDeactivateEvent>(onGameItemDeactivateEvent);
   }
 
   void onBulletTypeEvent(BulletTypeEvent event) {
@@ -55,14 +57,23 @@ class BulletPool extends PositionComponent {
   }
 
   void onBulletDeactivateEvent(BulletDeactivateEvent event) {
-    Bullet bullet = _activeBullets.remove(event.index)!;
-    _inactiveBullets[event.index] = bullet;
+    Bullet? bullet = _activeBullets.remove(event.index);
+    if (bullet != null) {
+      _inactiveBullets[event.index] = bullet;
+    }
   }
 
   // 이벤트 처리
   void onCollideEvent(CollideEvent event) {
-    for (Enemy enemy in event.enemies) {
+    List<Enemy> enemies = event.components.whereType<Enemy>().toList();
+    for (Enemy enemy in enemies) {
       collision(enemy);
+    }
+  }
+
+  void onGameItemDeactivateEvent(GameItemDeactivateEvent event) {
+    if (event.gameItemType == GameItemType.powerUp) {
+      _damage += event.itemValue.toInt();
     }
   }
 
@@ -88,6 +99,7 @@ class BulletPool extends PositionComponent {
     fireBulletSubscription?.cancel();
     bulletDeactivateSubscription?.cancel();
     collideSubscription?.cancel();
+    gameItemDeactivateSubscription?.cancel();
     super.onRemove();
   }
 }

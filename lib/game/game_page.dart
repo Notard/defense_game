@@ -1,6 +1,7 @@
 import 'package:defense_game/game/bullet_pool.dart';
 import 'package:defense_game/game/cloud.dart';
 import 'package:defense_game/game/enemy_pool.dart';
+import 'package:defense_game/game/game_item_pool.dart';
 import 'package:defense_game/game/my_ship.dart';
 import 'package:flame/components.dart';
 
@@ -32,5 +33,9 @@ class GamePage extends PositionComponent {
     EnemyPool enemyPool = EnemyPool(myShip: myShip);
     enemyPool.priority = 3;
     add(enemyPool);
+
+    GameItemPool gameItemPool = GameItemPool();
+    gameItemPool.priority = 4;
+    add(gameItemPool);
   }
 }

@@ -8,7 +8,8 @@ class MyShip extends PositionComponent {
   Timer? _fireTimer;
   StreamSubscription<PanMoveEvent>? panMoveSubscription;
   StreamSubscription<FireIntervalEvent>? fireIntervalSubscription;
-  double _fireInterval = 0.1;
+  StreamSubscription<GameItemDeactivateEvent>? gameItemDeactivateSubscription;
+  double _fireInterval = 0.5;
   DateTime _lastFireTime = DateTime.now();
   int _hp = 10;
 
@@ -27,12 +28,15 @@ class MyShip extends PositionComponent {
     panMoveSubscription = EventBus().on<PanMoveEvent>(onPanMoveEvent);
     fireIntervalSubscription =
         EventBus().on<FireIntervalEvent>(onFireIntervalEvent);
+    gameItemDeactivateSubscription =
+        EventBus().on<GameItemDeactivateEvent>(onGameItemDeactivateEvent);
   }
 
   @override
   void onRemove() {
     panMoveSubscription?.cancel();
     fireIntervalSubscription?.cancel();
+    gameItemDeactivateSubscription?.cancel();
     super.onRemove();
     _fireTimer?.stop();
   }
@@ -49,6 +53,14 @@ class MyShip extends PositionComponent {
 
   void onFireIntervalEvent(FireIntervalEvent event) {
     _fireInterval = event.interval;
+  }
+
+  void onGameItemDeactivateEvent(GameItemDeactivateEvent event) {
+    if (event.gameItemType == GameItemType.health) {
+      _hp += event.itemValue.toInt();
+    } else if (event.gameItemType == GameItemType.speedUp) {
+      _fireInterval -= event.itemValue;
+    }
   }
 
   @override

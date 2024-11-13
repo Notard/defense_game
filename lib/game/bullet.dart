@@ -64,19 +64,30 @@ class Bullet extends PositionComponent {
         position.y > screenSize.y / 2;
   }
 
-  // 충돌 체크
+  // 충돌 처리
   int collideWith(Enemy enemy) {
     Circle bulletCircle = Circle(position, _radius);
     Circle enemyCircle = Circle(enemy.position, enemy.size.x / 2);
-    if (enemyCircle.aabb.containsAabb2(bulletCircle.aabb)) {
+
+    if (checkCollision(bulletCircle, enemyCircle)) {
       if (!_isPenetrate) {
         deactivate();
       }
-      EventBus()
-          .fire(EnemyDamageEvent(damage: _damage, uniqueId: enemy.uniqueId));
+      EventBus().fire(EnemyDamageEvent(
+        damage: _damage,
+        uniqueId: enemy.uniqueId,
+        enemyType: enemy.enemyType,
+      ));
       return damage;
     }
     return 0;
+  }
+
+  // 충돌 체크
+  bool checkCollision(Circle c1, Circle c2) {
+    double distanceSquared = (c1.center - c2.center).length2;
+    double radiusSum = c1.radius + c2.radius;
+    return distanceSquared <= radiusSum * radiusSum;
   }
 
   @override

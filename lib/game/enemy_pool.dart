@@ -9,16 +9,12 @@ import 'package:defense_game/game/my_ship.dart';
 import 'package:flame/components.dart';
 import 'package:collection/collection.dart';
 
-enum EnemyType {
-  normal,
-}
-
 class EnemyPool extends PositionComponent {
   EnemyPool({required this.myShip});
   final Map<EnemyType, List<Enemy>> activeEnemies = {};
   final Map<EnemyType, List<Enemy>> inactiveEnemies = {};
   final MyShip myShip;
-  final double spawnInterval = 1;
+  final double spawnInterval = 5;
   final double screenWidth = 1080;
   final double screenHeight = 1920;
   double spawnTimer = 0;
@@ -35,6 +31,7 @@ class EnemyPool extends PositionComponent {
       inactiveEnemies[EnemyType.normal]!.add(EnemyNormal(
         myShip: myShip,
         uniqueId: i,
+        enemyType: EnemyType.normal,
         position: Vector2(-10000, -10000),
       ));
     }
@@ -82,7 +79,7 @@ class EnemyPool extends PositionComponent {
     for (EnemyType enemyType in activeEnemies.keys) {
       enemies.addAll(activeEnemies[enemyType]!);
     }
-    EventBus().fire(CollideEvent(enemies: enemies));
+    EventBus().fire(CollideEvent(components: enemies));
   }
 
   // 구독 해제
