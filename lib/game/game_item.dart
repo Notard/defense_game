@@ -1,59 +1,46 @@
 import 'package:defense_game/funtion/event_define.dart';
 import 'package:defense_game/funtion/eventbus.dart';
+import 'package:defense_game/funtion/prorgress_bar.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 
-class GameItem extends PositionComponent {
-  final GameItemType type;
-  GameItemType get gameItemType => type;
+class GameItem extends PositionComponent with HasGameRef {
+  GameItemType type;
   final int maxHp;
-  final bool isDebuff;
   int nowHp = 0;
-
+  final double effectValue;
+  TextComponent? hpTextComponent;
+  ProgressBar? progressBar;
   GameItem({
     required super.position,
     required this.type,
     required this.maxHp,
-    required this.isDebuff,
+    required this.effectValue,
   });
 
   @override
   void onLoad() async {
-    nowHp = maxHp;
-    super.onLoad();
-    String spritePath = '';
-    switch (type) {
-      case GameItemType.powerUp:
-        spritePath = 'power_item.png';
-        break;
-      case GameItemType.speedUp:
-        spritePath = 'speed_item.png';
-        break;
-      case GameItemType.health:
-        spritePath = 'hp_item.png';
-        break;
+    String spriteFilePath = '';
+    if (type == GameItemType.powerUp) {
+      spriteFilePath = 'power_item.png';
+    } else if (type == GameItemType.speedUp) {
+      spriteFilePath = 'speed_item.png';
     }
+    size = Vector2(256, 256);
     SpriteComponent spriteComponent = SpriteComponent();
-    Sprite itemSprite = await Sprite.load(spritePath);
+    Sprite itemSprite = Sprite(gameRef.images.fromCache(spriteFilePath));
     spriteComponent.sprite = itemSprite;
-    spriteComponent.size = Vector2(256, 256);
-
-    if (isDebuff) {
-      spriteComponent.paint = Paint()
-        ..colorFilter = const ColorFilter.mode(
-            Color.fromARGB(255, 255, 0, 0), BlendMode.modulate)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4;
-    }
+    spriteComponent.size = size;
     spriteComponent.anchor = Anchor.center;
     add(spriteComponent);
 
-    TextComponent textComponent = TextComponent();
-    textComponent.text = nowHp.toString();
-    textComponent.textRenderer = TextPaint(
+    nowHp = maxHp;
+    hpTextComponent = TextComponent();
+    hpTextComponent?.text = nowHp.toString();
+    hpTextComponent?.textRenderer = TextPaint(
       style: const TextStyle(
         color: Colors.white,
-        fontSize: 64,
+        fontSize: 72,
         fontWeight: FontWeight.bold,
         fontFamily: '온글잎 은별',
         shadows: [
@@ -65,28 +52,45 @@ class GameItem extends PositionComponent {
         ],
       ),
     );
-    textComponent.anchor = Anchor.center;
-
-    add(textComponent);
+    hpTextComponent?.anchor = Anchor.center;
+    add(hpTextComponent!);
+    //hp progress bar
+    double itemHeight = spriteComponent.size.y;
+    progressBar = ProgressBar(
+      backgroundColor: Colors.grey,
+      foregroundColor: Colors.green,
+      size: Vector2(256, 32),
+      position: Vector2(0, -itemHeight / 2),
+    );
+    progressBar?.anchor = Anchor.topCenter;
+    add(progressBar!);
+    anchor = Anchor.center;
+    super.onLoad();
   }
 
-  // 매 프레임마다 아래로 이동
-  @override
-  void update(double dt) {
-    position.y += 100 * dt;
-    super.update(dt);
-    if (position.y > 1000) {
+  int damaged(int damage) {
+    nowHp -= damage;
+    if (nowHp < 0) {
+      nowHp = 0;
+    }
+    hpTextComponent?.text = nowHp.toString();
+    progressBar?.progress = nowHp / maxHp;
+    if (nowHp <= 0) {
+      EventBus().fire(GameItemInactivateEvent(
+        gameItemType: type,
+        itemValue: effectValue,
+      ));
       removeFromParent();
     }
+    return nowHp;
   }
 
-  void damaged(int damage) {
-    nowHp -= damage;
-    if (nowHp <= 0) {
-      EventBus().fire(GameItemDeactivateEvent(
-        gameItemType: type,
-        itemValue: nowHp.toDouble(),
-      ));
+  @override
+  void update(double dt) {
+    position.y += 200 * dt;
+    if (position.y > 960) {
+      removeFromParent();
     }
+    super.update(dt);
   }
 }

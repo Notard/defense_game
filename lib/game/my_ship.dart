@@ -5,12 +5,13 @@ import 'package:defense_game/funtion/eventbus.dart';
 import 'package:flame/components.dart';
 
 class MyShip extends PositionComponent {
-  Timer? _fireTimer;
+  // Timer? _fireTimer;
   StreamSubscription<PanMoveEvent>? panMoveSubscription;
   StreamSubscription<FireIntervalEvent>? fireIntervalSubscription;
-  StreamSubscription<GameItemDeactivateEvent>? gameItemDeactivateSubscription;
+  StreamSubscription<GameItemInactivateEvent>? gameItemInactivateSubscription;
   double _fireInterval = 0.5;
-  DateTime _lastFireTime = DateTime.now();
+  double _fireTime = 0;
+
   int _hp = 10;
 
   @override
@@ -28,17 +29,16 @@ class MyShip extends PositionComponent {
     panMoveSubscription = EventBus().on<PanMoveEvent>(onPanMoveEvent);
     fireIntervalSubscription =
         EventBus().on<FireIntervalEvent>(onFireIntervalEvent);
-    gameItemDeactivateSubscription =
-        EventBus().on<GameItemDeactivateEvent>(onGameItemDeactivateEvent);
+    gameItemInactivateSubscription =
+        EventBus().on<GameItemInactivateEvent>(onGameItemInactivateEvent);
   }
 
   @override
   void onRemove() {
     panMoveSubscription?.cancel();
     fireIntervalSubscription?.cancel();
-    gameItemDeactivateSubscription?.cancel();
+    gameItemInactivateSubscription?.cancel();
     super.onRemove();
-    _fireTimer?.stop();
   }
 
   void onPanMoveEvent(PanMoveEvent event) {
@@ -46,19 +46,12 @@ class MyShip extends PositionComponent {
     position.x = position.x.clamp(-540, 540);
   }
 
-  void _onFireTimerTick() {
-    EventBus()
-        .fire(BulletFireEvent(position: position, velocity: Vector2(0, -900)));
-  }
-
   void onFireIntervalEvent(FireIntervalEvent event) {
     _fireInterval = event.interval;
   }
 
-  void onGameItemDeactivateEvent(GameItemDeactivateEvent event) {
-    if (event.gameItemType == GameItemType.health) {
-      _hp += event.itemValue.toInt();
-    } else if (event.gameItemType == GameItemType.speedUp) {
+  void onGameItemInactivateEvent(GameItemInactivateEvent event) {
+    if (event.gameItemType == GameItemType.speedUp) {
       _fireInterval -= event.itemValue;
     }
   }
@@ -66,10 +59,10 @@ class MyShip extends PositionComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    DateTime now = DateTime.now();
-    if (now.difference(_lastFireTime).inMilliseconds >= _fireInterval * 1000) {
-      _onFireTimerTick();
-      _lastFireTime = now;
+    _fireTime += dt;
+    if (_fireTime >= _fireInterval) {
+      EventBus().fire(BulletFireEvent(position: position));
+      _fireTime = 0;
     }
   }
 

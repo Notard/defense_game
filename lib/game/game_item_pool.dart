@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:defense_game/funtion/event_define.dart';
@@ -6,47 +5,15 @@ import 'package:defense_game/funtion/eventbus.dart';
 import 'package:defense_game/game/game_item.dart';
 import 'package:flame/components.dart';
 
-class GameItemPool extends PositionComponent {
-  GameItem? _gameItem1;
-  GameItem? _gameItem2;
+class GameItemPool extends PositionComponent with HasGameRef {
   DateTime? _lastDamageTime;
   int _makeItemCount = 1;
-
-  final List<PositionComponent> _gameItems = [];
-
-  // 이벤트 구독 변수
-  StreamSubscription<GameItemDamageEvent>? gameItemDamageSubscription;
-  StreamSubscription<GameItemDeactivateEvent>? gameItemDeactivateSubscription;
 
   @override
   void onLoad() async {
     super.onLoad();
+    gameRef.images.loadAll(['power_item.png', 'speed_item.png']);
     _lastDamageTime = DateTime.now();
-    gameItemDamageSubscription =
-        EventBus().on<GameItemDamageEvent>(onGameItemDamageEvent);
-    gameItemDeactivateSubscription =
-        EventBus().on<GameItemDeactivateEvent>(onGameItemDeactivateEvent);
-  }
-
-  @override
-  void onRemove() {
-    super.onRemove();
-    gameItemDamageSubscription?.cancel();
-    gameItemDeactivateSubscription?.cancel();
-  }
-
-  void onGameItemDamageEvent(GameItemDamageEvent event) {
-    PositionComponent gameItem = event.gameItem;
-    if (gameItem == _gameItem1) {
-      _gameItem1?.damaged(event.damage);
-    } else if (gameItem == _gameItem2) {
-      _gameItem2?.damaged(event.damage);
-    }
-  }
-
-  void onGameItemDeactivateEvent(GameItemDeactivateEvent event) {
-    removeAll(_gameItems);
-    _gameItems.clear();
   }
 
   @override
@@ -56,34 +23,25 @@ class GameItemPool extends PositionComponent {
     // 10초마다 아이템 생성
     if (_lastDamageTime != null &&
         DateTime.now().difference(_lastDamageTime!).inSeconds > 10) {
-      bool isDebuff = Random().nextBool();
       _lastDamageTime = DateTime.now();
-      double xPos1 = -300;
-      double xPos2 = 300;
-      GameItemType randomType = GameItemType.values[Random().nextInt(3)];
+      double xPos1 = Random().nextDouble() * 600 - 300;
+      int randomTypeIndex = Random().nextInt(GameItemType.values.length);
+      GameItemType randomType = GameItemType.values[randomTypeIndex];
       int hp = _makeItemCount * 10;
-      _gameItem1 = GameItem(
+      double effectValue = randomType == GameItemType.powerUp
+          ? 1 * _makeItemCount.toDouble()
+          : 0.02;
+      GameItem gameItem = GameItem(
         position: Vector2(xPos1, -960),
         type: randomType,
         maxHp: hp,
-        isDebuff: isDebuff,
+        effectValue: effectValue,
       );
-      add(_gameItem1!);
-      _gameItems.add(_gameItem1!);
-      GameItemType randomType2 = GameItemType.values[Random().nextInt(3)];
-      _gameItem2 = GameItem(
-        position: Vector2(xPos2, -960),
-        type: randomType2,
-        maxHp: hp,
-        isDebuff: !isDebuff,
-      );
-      add(_gameItem2!);
-      _gameItems.add(_gameItem2!);
+      add(gameItem);
+
+      EventBus().fire(GameItemActivateEvent(gameItem: gameItem));
+
       _makeItemCount++;
-    }
-    // 충돌 처리
-    if (_gameItems.isNotEmpty) {
-      EventBus().fire(CollideEvent(components: _gameItems));
     }
   }
 }

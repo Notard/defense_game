@@ -5,6 +5,7 @@ import 'package:defense_game/funtion/eventbus.dart';
 import 'package:defense_game/game/main_page.dart';
 import 'package:defense_game/game/title_page.dart';
 import 'package:defense_game/game/game_page.dart';
+import 'package:defense_game/game/game_over_page.dart';
 import 'package:flame/components.dart';
 
 class DefenseWorld extends World {
@@ -26,6 +27,8 @@ class DefenseWorld extends World {
       add(MainPage());
     } else if (event.pageType == PageType.game) {
       add(GamePage());
+    } else if (event.pageType == PageType.gameOver) {
+      add(GameOverPage());
     }
   }
 

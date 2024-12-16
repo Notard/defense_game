@@ -4,6 +4,7 @@ enum PageType {
   title,
   main,
   game,
+  gameOver,
 }
 
 class ChangePageEvent {
@@ -29,13 +30,12 @@ class BulletTypeEvent {
 
 class BulletFireEvent {
   final Vector2 position;
-  final Vector2 velocity;
-  BulletFireEvent({required this.position, required this.velocity});
+  BulletFireEvent({required this.position});
 }
 
-class BulletDeactivateEvent {
+class BulletInactivateEvent {
   final int index;
-  BulletDeactivateEvent({required this.index});
+  BulletInactivateEvent({required this.index});
 }
 
 class FireIntervalEvent {
@@ -48,18 +48,31 @@ class CollideEvent {
   CollideEvent({required this.components});
 }
 
+// 활성화 한 총알 리스트
+class ActivateBulletListEvent {
+  final List<PositionComponent> bullets;
+  ActivateBulletListEvent({required this.bullets});
+}
+
+// 활성화 한 적 리스트
+class ActivateEnemyListEvent {
+  final List<PositionComponent> enemies;
+  ActivateEnemyListEvent({required this.enemies});
+}
+
 enum EnemyType {
   normal,
 }
 
 class EnemyDamageEvent {
   final int damage;
-  final int uniqueId;
-  final EnemyType enemyType;
+  final int enemyID;
+  final int bulletID;
+
   EnemyDamageEvent({
     required this.damage,
-    required this.uniqueId,
-    required this.enemyType,
+    required this.enemyID,
+    required this.bulletID,
   });
 }
 
@@ -68,21 +81,20 @@ class EnemyDeactivateEvent {
   EnemyDeactivateEvent({required this.uniqueId});
 }
 
-class GameItemDamageEvent {
-  final PositionComponent gameItem;
-  final int damage;
-  GameItemDamageEvent({required this.gameItem, required this.damage});
-}
-
 enum GameItemType {
   powerUp,
   speedUp,
-  health,
 }
 
-class GameItemDeactivateEvent {
+class GameItemInactivateEvent {
   final GameItemType gameItemType;
   final double itemValue;
-  GameItemDeactivateEvent(
+
+  GameItemInactivateEvent(
       {required this.gameItemType, required this.itemValue});
+}
+
+class GameItemActivateEvent {
+  final PositionComponent gameItem;
+  GameItemActivateEvent({required this.gameItem});
 }
